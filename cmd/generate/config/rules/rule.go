@@ -124,3 +124,7 @@ func alphaNumericExtendedLong(size string) string {
 func hex8_4_4_4_12() string {
 	return `[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}`
 }
+
+func uuid() string {
+	return hex8_4_4_4_12()
+}
