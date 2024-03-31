@@ -44,6 +44,7 @@ func init() {
 	rootCmd.PersistentFlags().Int("exit-code", 1, "exit code when leaks have been encountered")
 	rootCmd.PersistentFlags().StringP("source", "s", ".", "path to source")
 	rootCmd.PersistentFlags().StringP("report-path", "r", "", "report file")
+	rootCmd.PersistentFlags().BoolP("only-save-with-findings", "o", false, "only save report if leaks are found")
 	rootCmd.PersistentFlags().StringP("report-format", "f", "json", "output format (json, csv, junit, sarif)")
 	rootCmd.PersistentFlags().StringP("baseline-path", "b", "", "path to baseline with issues that can be ignored")
 	rootCmd.PersistentFlags().StringP("log-level", "l", "info", "log level (trace, debug, info, warn, error, fatal)")
@@ -286,10 +287,14 @@ func findingSummaryAndExit(findings []report.Finding, cmd *cobra.Command, cfg co
 
 	// write report if desired
 	reportPath, _ := cmd.Flags().GetString("report-path")
+	onlySaveWithFindings, _ := cmd.Flags().GetBool("only-save-with-findings")
+
 	ext, _ := cmd.Flags().GetString("report-format")
 	if reportPath != "" {
-		if err := report.Write(findings, cfg, ext, reportPath); err != nil {
-			log.Fatal().Err(err).Msg("could not write")
+		if !onlySaveWithFindings || (onlySaveWithFindings && len(findings) > 0) {
+			if err := report.Write(findings, cfg, ext, reportPath); err != nil {
+				log.Fatal().Err(err).Msg("could not write")
+			}
 		}
 	}
 

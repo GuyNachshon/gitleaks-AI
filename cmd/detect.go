@@ -15,6 +15,8 @@ func init() {
 	rootCmd.AddCommand(detectCmd)
 	detectCmd.Flags().Bool("no-git", false, "treat git repo as a regular directory and scan those files, --log-opts has no effect on the scan when --no-git is set")
 	detectCmd.Flags().Bool("pipe", false, "scan input from stdin, ex: `cat some_file | gitleaks detect --pipe`")
+	detectCmd.Flags().BoolP("only-save-with-findings", "o", false, "only save report if leaks are found")
+
 }
 
 var detectCmd = &cobra.Command{
@@ -47,6 +49,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 	exitCode, err := cmd.Flags().GetInt("exit-code")
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not get exit code")
+	}
+
+	onlySaveWithFindings, err := cmd.Flags().GetBool("only-save-with-findings")
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get only-save-with-findings flag value")
 	}
 
 	// determine what type of scan:
@@ -94,6 +101,11 @@ func runDetect(cmd *cobra.Command, args []string) {
 			// don't exit on error, just log it
 			log.Error().Err(err).Msg("")
 		}
+	}
+
+	if onlySaveWithFindings && len(findings) == 0 {
+		log.Info().Msg("No findings, not saving the report due to only-save-with-findings flag")
+		return
 	}
 
 	findingSummaryAndExit(findings, cmd, cfg, exitCode, start, err)
